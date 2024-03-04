@@ -3,10 +3,17 @@ import logo from "./img/NoteCodeLogo.svg";
 import Editor from "@monaco-editor/react";
 import share from "./img/Share.svg";
 import { useState } from "react";
+import axios from "axios";
+import link from "./img/link.svg";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+const api = "http://localhost:5000/api/";
 
 function App() {
   return (
     <div className="bg-gradient-to-br from-purple-400 via-purple-600 to-purple-800 h-screen relative">
+      <ToastContainer />
       <div
         className="bg-cover bg-center h-[80%] w-full flex justify-center"
         style={{
@@ -60,7 +67,6 @@ function SecTwo() {
     <input disabled type="button" value="Click me" />
   </body>
 </html>`;
-  console.log(newCode);
   function handleCodeChange(e) {
     setNewCode(e);
   }
@@ -80,16 +86,49 @@ function SecTwo() {
           <Lang selectedLang={selectedLang} setSelectedLang={setSelectedLang} />
           <Theme selecetedTheme={selecetedTheme} setSelecetedTheme={setSelecetedTheme} />
         </div>
-        <Button />
+        <Button newCode={newCode} setNewCode={setNewCode} />
       </div>
     </div>
   );
 }
 
-function Button() {
+function Button({ newCode, setNewCode }) {
+  const [id, setId] = useState("");
+  const handleClick = () => {
+    if (newCode !== "") {
+      axios
+        .post(`${api}code/add`, {
+          code: newCode,
+        })
+        .then(function (res) {
+          setId(res.data._id);
+          // link to back end
+          navigator.clipboard.writeText(`${api}code/${res.data._id}`);
+          toast("Copied the link to the doc");
+          setNewCode("");
+        })
+        .catch(function (error) {
+          toast("Error");
+        });
+    }
+  };
   return (
-    <div className=" w-[50%] flex justify-end">
-      <button className="bg-[#406AFF] hover:bg-[#1d2c60] transition-all text-white p-1 rounded-3xl w-24 h-8 flex  justify-center items-center gap-2">
+    <div className=" w-[50%] flex justify-end gap-4">
+      <div
+        className={`${
+          newCode === "" ? "hidden" : "flex"
+        } text-[12px] items-center gap-1 `}
+      >
+        <img className="w-5" src={link} alt="link" />
+        <p>link</p>
+      </div>
+      <button
+        onClick={handleClick}
+        disabled={newCode === ""}
+        className={`transition-all text-white p-1 rounded-3xl w-24 h-8 flex  justify-center items-center gap-2 ${
+          newCode !== "" ? "bg-[#406AFF] hover:bg-[#1d2c60]" : "bg-[#3b3b3b] opacity-30"
+        }`}
+      >
         <img src={share} alt="share" />
         Share
       </button>
