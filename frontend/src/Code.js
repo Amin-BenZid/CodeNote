@@ -1,38 +1,26 @@
 import bg from "./img/Hero-Background-notecode@2x.png";
 import Editor from "@monaco-editor/react";
 import share from "./img/Share.svg";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import link from "./img/link.svg";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import React from "react";
-import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
-import Code from "./Code";
+import SecOne from "./SecOne";
 import Lang from "./Lang";
 import Theme from "./Theme";
-import SecOne from "./SecOne";
 const api = "http://localhost:5000/api/";
 
-function App() {
+const Code = () => {
   return (
-    <Router>
-      <div>
-        <Switch>
-          <Route exact path="/">
-            <Home />
-          </Route>
-          <Route path="/code">
-            <Code />
-          </Route>
-        </Switch>
-      </div>
-    </Router>
+    <div>
+      <Home />
+    </div>
   );
-}
+};
 
-export default App;
-
+export default Code;
 function Home() {
   return (
     <div className="bg-gradient-to-br from-purple-400 via-purple-600 to-purple-800 h-screen relative">
@@ -49,29 +37,24 @@ function Home() {
     </div>
   );
 }
-
+const urlParams = new URLSearchParams(window.location.search);
+const myParam = urlParams.get("id");
 export function SecTwo() {
   const [selectedLang, setSelectedLang] = useState("html");
   const [selecetedTheme, setSelecetedTheme] = useState("light");
   const [newCode, setNewCode] = useState("");
-  const defaultCode = `<html>
-  <head>
-    <title>HTML Sample</title>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <style type="text/css">
-      h1 {
-        color: #CCA3A3;
-      }
-    </style>
-    <script type="text/javascript">
-      alert("I am a sample... visit devChallengs.io for more projects");
-    </script>
-  </head>
-  <body>
-    <h1>Heading No.1</h1>
-    <input disabled type="button" value="Click me" />
-  </body>
-</html>`;
+  const [code, setCode] = useState();
+  useEffect(() => {
+    axios
+      .get(`${api}code/${myParam}`)
+      .then(function (response) {
+        setCode(response.data.code);
+      })
+      .catch(function (error) {
+        toast("Error");
+      });
+  }, []);
+
   function handleCodeChange(e) {
     setNewCode(e);
   }
@@ -82,7 +65,7 @@ export function SecTwo() {
         className=" h-[60vh] md:h-[65vh] lg:h-[59vh]  "
         width="90vw "
         defaultLanguage={selectedLang}
-        defaultValue={defaultCode}
+        defaultValue={code}
         theme={selecetedTheme}
         onChange={handleCodeChange}
       />
@@ -96,25 +79,17 @@ export function SecTwo() {
     </div>
   );
 }
-
-function Button({ newCode, setNewCode }) {
+function Button({ newCode }) {
   const handleClick = () => {
-    if (newCode !== "") {
-      axios
-        .post(`${api}code/add`, {
-          code: newCode,
-        })
-        .then(function (res) {
-          // link to back end
-          // `${api}code/${res.data._id}`;
-          navigator.clipboard.writeText(`http://localhost:3000/code?id=${res.data._id}`);
-          toast("Link is copied");
-          setNewCode("");
-        })
-        .catch(function (error) {
-          toast("Error");
-        });
-    }
+    axios
+      .put(`${api}code/update/${myParam}`, { code: newCode })
+      .then(function (res) {
+        navigator.clipboard.writeText(window.location.href);
+        toast("Link is copied");
+      })
+      .catch(function (error) {
+        toast("Error");
+      });
   };
   return (
     <div className=" w-[50%] flex justify-end gap-4">
